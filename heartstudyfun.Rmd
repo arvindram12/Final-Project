@@ -1,0 +1,24 @@
+Heart Disease Data
+========================================================
+
+
+```{r}
+data<-read.csv("HeartDataAll.csv")
+data<-data[-1]
+data[data=="?"]<-NA# changes intances of ? to NA
+table(complete.cases(data)) # only 63 rows without missing data
+data1<-data[,c(1,2,3,4,5,15)] #subset of rows we might use
+data1[,5][data[,5]=="0"]<-NA #a lot of the cholestreol meaurements is 0, which is impossible
+table(complete.cases(data1),data[,15])# now there are no cholestrol measurements for switz
+data1[,4]<-as.numeric(data1[,4])# change the resting BP to numeric
+summary(lm(trestbps~age+place, data=data1))#actually a fairly good p-value here for age
+
+```
+
+You can also embed plots, for example:
+
+```{r fig.width=7, fig.height=6}
+library(ggplot2)
+qplot(age,trestbps, data=data1) #ugh
+```
+all in all i think we should go with the tried and tested F-Ham Heart Study
