@@ -1,0 +1,49 @@
+
+
+\documentclass{article}
+\usepackage{graphicx}
+\begin{document}
+\title{Group Project \\ Framingham Heart Study}
+\author{}
+\maketitle
+<<data>>=
+frm<-read.csv("frmgham2.csv")
+require(GGally)
+require(ggplot2)
+@
+\section{Repeat Observations}
+The Framingham Heart Study has individuals with observations.  For the sake of simplicity we will first remove extra observation such that each individual has only one observation.
+<<bb>>=
+frm$RANDID<-as.factor(frm$RANDID)
+frm1<-frm[which(!duplicated(frm$RANDID)),]
+@
+We are left with 4434 observation, which is still a fairly hefty dataset.
+
+\section{Candidate Continuous Variables for Linear Regression}
+
+To evaluate continuous variables I will create a subset of the data containing only coninuous variables
+<<cc>>=
+frm2<-frm1[,c(3,4,5,6,8,9,12,13)]
+@
+
+In the following example I utilized the GGally package to create a matrix of plots and correlational ceofficients for candidate continuous predictor and outcome variables, after removing observations with missing data.
+\begin{figure}[h]
+\begin{center}
+    \centering
+    \includegraphics[width=1\textwidth]{Rplot.pdf}
+    \caption{Awesome Image}
+    \label{fig:awesome_image}
+\end{center}
+\end{figure}
+\newpage
+
+From the figure we can see that the most consistent correlation between one variable and the others seems to be Systolic Blood pressure.  This is a good outcome variable because it intuitively makes sense as an outcome, whereas other variables such as BMI occur in a large part due to environmental factors that aren't factored into this study such as diet. Originally, I was thinking of using Total Cholestrol, however it has relatively weak correlation with many of the factors of interest. Systolic Blood Pressure has the strongest correlation with Diabolic Blood Pressure, however this is a relatively uninteresting relationship to study as it they can be considered more or less colinear. We can move on instead to the next highest correlation which is BMI.
+\subsection{Simple Liinear Regression Analysis}
+<<dd>>=
+m1<-lm(SYSBP~BMI, data=frm2)
+summary(m1)
+qplot(BMI, SYSBP, data=frm2) + geom_smooth(method="lm",se=TRUE)
+@
+From our simple linear modeling summary we can see a conclude that there is an association between systolic blood pressure and BMI.  The adjusted $R^2$ is relatively low.  It would be interesting to see then the effect of adding new variables to our model.
+
+\end{document}
