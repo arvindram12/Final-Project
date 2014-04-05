@@ -19,6 +19,104 @@ frm1<-frm[which(!duplicated(frm$RANDID)),]
 @
 We are left with 4434 observation, which is still a fairly hefty dataset.
 
+\section{Characteristics of the DataSet}
+
+o  What is the background/context for this data?
+
+- Identify the main risk factors to Cardiovascular Disease (CVD)
+
+- http://www.framinghamheartstudy.org/about-fhs/history.php
+
+o  How many observations are there?
+
+- 39 variables with 4434 observations (each participant) afrer getting rid of 
+  extra observations
+
+
+o	What is the unit of observation?
+
+- Systolic blood pressure(mmHg) 
+: pressure in the arteries when the heart contracts 
+
+- Diastolic blood pressure(mmHg) 
+: pressure in the arteries when the heart rests between beats
+
+- HDLC : many missing values(mg/dL) 
+: Good cholesterol, reduce the risk for heart disease
+
+- LDLC : many missing values 
+: Bad cholesterol
+
+- BMI : Body Mass Index 
+
+: https://www.nhlbi.nih.govguidelines/obesity/BMI/bmicalc.htm
+  
+- Glucose (mg/dL)
+
+: http://www.diabetes.org/living-with-diabetes/treatment-and-care/blood-glucose-control/checking-your-blood-glucose.html
+
+- Heart rate (beat/min)
+
+- Age (yr)
+
+- Total cholesterol : total amount of cholesterol
+
+: http://www.nlm.nih.gov/medlineplus/ency/patientinstructions/000386.htm
+
+- CIGPDAY ?
+
+
+o	Is there any missing data? If so, are there patterns to the missingness?
+
+    - For HDLC and LDLC variables, there are many missing data 
+    
+<<bb2>>=
+# Check the number of missing values of the continuous varaibles
+sum(is.na(frm1$SYSBP))
+sum(is.na(frm1$DIABP))
+sum(is.na(frm1$BMI))
+sum(is.na(frm1$GLUCOSE))
+sum(is.na(frm1$HEARTRTE))
+sum(is.na(frm1$TOTCHOL))
+sum(is.na(frm1$AGE))
+sum(is.na(frm1$CIGPDAY))
+sum(is.na(frm1$HDLC))
+sum(is.na(frm1$LDLC))
+@
+
+o  What are the key variables and what do their distributions look like?
+
+- SYSBP : Right skewed
+
+- DIABP : Normally distributed
+
+- BMI : Normallly distributed
+
+- GLUCOSE : Normally distributed (some outliers over 200)
+
+- HEARTRTE : Normally distributed
+
+- AGE : I am not sure
+
+- CIGPDAY : most data points are located below 10
+
+- TOTCHOL : Normally distributed
+<<bb3>>=
+hist(frm1$SYSBP)
+hist(frm1$DIABP)
+hist(frm1$BMI)
+hist(frm1$GLUCOSE)
+hist(frm1$HEARTRTE)
+hist(frm1$AGE)
+hist(frm1$CIGPDAY)
+hist(frm1$TOTCHOL)
+@
+
+o  Are there any obvious outliers in the data?
+
+- For the GLUCOSE variable, there are some outliers. 
+
+
 \section{Candidate Continuous Variables for Linear Regression}
 
 To evaluate continuous variables I will create a subset of the data containing only coninuous variables
@@ -45,5 +143,27 @@ summary(m1)
 qplot(BMI, SYSBP, data=frm2) + geom_smooth(method="lm",se=TRUE)
 @
 From our simple linear modeling summary we can see a conclude that there is an association between systolic blood pressure and BMI.  The adjusted $R^2$ is relatively low.  It would be interesting to see then the effect of adding new variables to our model.
+
+<<dd2>>=
+# Convert data type of SEX variable from integer to factor 
+frm1_du <- frm1
+frm1_du$SEX <- as.factor(frm1_du$SEX)
+
+# Multiple regression model, 1 continuous and 1 categorical variables
+m2<-lm(SYSBP~BMI+factor(SEX), data=frm1_du)
+summary(m2)
+qplot(BMI, SYSBP, data=frm1_du, color=SEX) + geom_smooth(method="lm",se=TRUE)
+
+# Another trial with another continuous variable
+m3<-lm(SYSBP~AGE+factor(SEX), data=frm1_du)
+summary(m3)
+qplot(AGE, SYSBP, data=frm1_du, color=SEX) + geom_smooth(method="lm",se=TRUE)
+
+# Another trial with another continuous variable
+m4<-lm(GLUCOSE~AGE+factor(SEX), data=frm1_du)
+summary(m4)
+qplot(AGE, GLUCOSE, data=frm1_du, color=SEX) + geom_smooth(method="lm",se=TRUE)
+
+@
 
 \end{document}
