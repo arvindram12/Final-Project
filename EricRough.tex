@@ -1,0 +1,284 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage[margin=0.5in]{geometry}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\section{Explanation}
+
+I haven't had a chance to organize this, obviously.  The main purpose of this section is to run MLR on different combinations of variables, and then test them via, Adjusted $R^2$, AIC, and BIC. I created a function ``test()" to do this.  You input an outcome variable, variables to use in every model, and variables to test.  The function output is a list of three objects. The first contains the variables ran in the MLR. The second is a matrix of Adj. $R^2$, AIC, and BIC values for each model.  The third is a list of each lm() output.
+
+The outcome variable I chose was ``SYSBP"
+
+Every model includes: ``AGE" and ``SEX"
+
+I tested ``TOTCHOL", ``BMI", ``GLUCOSE", ``CURSMOKE", ``DIABETES", ``BPMEDS",``HEARTRTE", and ``educ".
+
+Adjusted $R^2$ was highest for the model that includes:``TOTCHOL", ``BMI", ``GLUCOSE", ``CURSMOKE", ``BPMEDS",``HEARTRTE", ``educ", ``AGE", and ``SEX". This includes everything but ``DIABETES".
+
+AIC and BID values were lowest for the model that includes:``TOTCHOL", ``BMI", ``GLUCOSE", ``BPMEDS",``HEARTRTE", ``educ", ``AGE", and ``SEX". This includes everything but ``DIABETES", and ``CURSMOKE".
+
+There is a ton of other stuff to say about this.  For one BMI was the strongest association for adjusted $R^2$, and GLUCOSE was the strongest association for AIC and BIC.
+
+AIC and BIC had the same strongest association per number of variables, but this wasn't true for every combination of variables.
+
+I ranked each model, for each criteria and want to include a graph of these values as well.
+
+You can run the code above.  After you do the ``yes" object will contain the output of the test() function. The ``rank" will contain the matrix of rank of each criteria.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{require}\hlstd{(ggplot2)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: ggplot2}}\begin{alltt}
+\hlkwd{require}\hlstd{(RCurl)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: RCurl\\\#\# Loading required package: bitops}}\begin{alltt}
+\hlkwd{require}\hlstd{(plyr)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: plyr}}\begin{alltt}
+\hlstd{data} \hlkwb{<-} \hlkwd{getURL}\hlstd{(}\hlstr{"https://raw.githubusercontent.com/arvindram12/Final-Project/master/frmgham2.csv"}\hlstd{,}
+    \hlkwc{ssl.verifypeer} \hlstd{=} \hlnum{0L}\hlstd{,} \hlkwc{followlocation} \hlstd{=} \hlnum{1L}\hlstd{)}
+\hlkwd{writeLines}\hlstd{(data,} \hlstr{"framingham.csv"}\hlstd{)}
+\hlstd{frm} \hlkwb{<-} \hlkwd{read.csv}\hlstd{(}\hlstr{"framingham.csv"}\hlstd{)}
+\hlstd{frm}\hlopt{$}\hlstd{RANDID} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(frm}\hlopt{$}\hlstd{RANDID)}
+\hlstd{frm}\hlopt{$}\hlstd{SEX} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(frm}\hlopt{$}\hlstd{SEX)}
+\hlstd{frm}\hlopt{$}\hlstd{CURSMOKE} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(frm}\hlopt{$}\hlstd{CURSMOKE)}
+\hlstd{frm}\hlopt{$}\hlstd{DIABETES} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(frm}\hlopt{$}\hlstd{DIABETES)}
+\hlstd{frm}\hlopt{$}\hlstd{BPMEDS} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(frm}\hlopt{$}\hlstd{BPMEDS)}
+\hlstd{frm}\hlopt{$}\hlstd{educ} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(frm}\hlopt{$}\hlstd{edu)}
+\hlstd{frm1} \hlkwb{<-} \hlstd{frm[}\hlkwd{which}\hlstd{(}\hlopt{!}\hlkwd{duplicated}\hlstd{(frm}\hlopt{$}\hlstd{RANDID)), ]}
+\hlstd{test} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{outcome}\hlstd{,} \hlkwc{need}\hlstd{,} \hlkwc{test}\hlstd{,} \hlkwc{data}\hlstd{) \{}
+    \hlstd{out1} \hlkwb{<-} \hlstd{data[, outcome]}
+    \hlstd{need1} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(data[, need])}
+    \hlkwd{colnames}\hlstd{(need1)} \hlkwb{<-} \hlkwd{colnames}\hlstd{(data[need])}
+    \hlstd{test1} \hlkwb{<-} \hlstd{data[, test]}
+    \hlstd{x} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(test1)}
+    \hlstd{combn1} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,} \hlkwc{y}\hlstd{) \{}
+        \hlkwd{combn}\hlstd{(y, x)}
+    \hlstd{\}}
+    \hlstd{dee} \hlkwb{<-} \hlkwd{lapply}\hlstd{(x, combn1,} \hlkwc{y} \hlstd{= x)}
+    \hlstd{elem} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,} \hlkwc{y}\hlstd{,} \hlkwc{z}\hlstd{) \{}
+        \hlstd{test2} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(}\hlkwc{x} \hlstd{= z[, x])}
+        \hlkwd{colnames}\hlstd{(test2)} \hlkwb{<-} \hlkwd{colnames}\hlstd{(z[x])}
+        \hlstd{mat} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(}\hlkwd{cbind}\hlstd{(test2, need1))}
+        \hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= mat)}
+    \hlstd{\}}
+    \hlstd{what} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{c}\hlstd{) \{}
+        \hlkwd{apply}\hlstd{(dee[[c]],} \hlnum{2}\hlstd{, elem,} \hlkwc{y} \hlstd{= out1,} \hlkwc{z} \hlstd{= test1)}
+    \hlstd{\}}
+    \hlstd{model} \hlkwb{<-} \hlkwd{as.list}\hlstd{(}\hlkwd{lapply}\hlstd{(x, what))}
+    \hlstd{model1} \hlkwb{<-} \hlkwd{unlist}\hlstd{(model,} \hlkwc{recursive} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+    \hlstd{call} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+        \hlstd{sum} \hlkwb{<-} \hlkwd{summary}\hlstd{(x)}
+        \hlstd{sum}\hlopt{$}\hlstd{adj.r.squared}
+    \hlstd{\}}
+    \hlstd{call1} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+        \hlkwd{names}\hlstd{(x}\hlopt{$}\hlstd{coef)}
+    \hlstd{\}}
+    \hlstd{coef} \hlkwb{<-} \hlkwd{lapply}\hlstd{(model1, call1)}
+    \hlstd{coef1} \hlkwb{<-} \hlkwd{lapply}\hlstd{(coef, rbind)}
+
+    \hlstd{coef2} \hlkwb{<-} \hlkwd{rbind.fill.matrix}\hlstd{(coef1)}
+    \hlstd{adjr} \hlkwb{<-} \hlkwd{lapply}\hlstd{(model1, call)}
+    \hlstd{adjr1} \hlkwb{<-} \hlkwd{do.call}\hlstd{(rbind, adjr)}
+    \hlstd{aics} \hlkwb{<-} \hlkwd{lapply}\hlstd{(model1, AIC)}
+    \hlstd{aics1} \hlkwb{<-} \hlkwd{do.call}\hlstd{(rbind, aics)}
+    \hlstd{bics} \hlkwb{<-} \hlkwd{lapply}\hlstd{(model1, BIC)}
+    \hlstd{bics1} \hlkwb{<-} \hlkwd{do.call}\hlstd{(rbind, bics)}
+    \hlstd{frame} \hlkwb{<-} \hlstd{as.data.frame} \hlkwb{<-} \hlkwd{cbind}\hlstd{(adjr1, aics1, bics1)}
+    \hlkwd{colnames}\hlstd{(frame)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"Adj R^2"}\hlstd{,} \hlstr{"AIC"}\hlstd{,} \hlstr{"BIC"}\hlstd{)}
+    \hlkwd{list}\hlstd{(coef2, frame, model1)}
+\hlstd{\}}
+\hlstd{yes} \hlkwb{<-} \hlkwd{test}\hlstd{(}\hlkwc{outcome} \hlstd{=} \hlstr{"SYSBP"}\hlstd{,} \hlkwc{need} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"AGE"}\hlstd{,} \hlstr{"SEX"}\hlstd{),} \hlkwc{test} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"TOTCHOL"}\hlstd{,} \hlstr{"BMI"}\hlstd{,}
+    \hlstr{"GLUCOSE"}\hlstd{,} \hlstr{"CURSMOKE"}\hlstd{,} \hlstr{"DIABETES"}\hlstd{,} \hlstr{"BPMEDS"}\hlstd{,} \hlstr{"HEARTRTE"}\hlstd{,} \hlstr{"educ"}\hlstd{),} \hlkwc{data} \hlstd{= frm1)}
+\hlstd{yes1} \hlkwb{<-} \hlstd{yes[[}\hlnum{1}\hlstd{]]}
+\hlstd{yes2} \hlkwb{<-} \hlstd{yes[[}\hlnum{2}\hlstd{]]}
+\hlstd{rank} \hlkwb{<-} \hlkwd{cbind}\hlstd{(}\hlkwd{nrow}\hlstd{(yes2)} \hlopt{+} \hlnum{1} \hlopt{-} \hlkwd{rank}\hlstd{(yes2[,} \hlnum{1}\hlstd{]),} \hlkwd{rank}\hlstd{(yes2[,} \hlnum{2}\hlstd{]),} \hlkwd{rank}\hlstd{(yes2[,}
+    \hlnum{3}\hlstd{]))}
+\hlstd{rank} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(rank)}
+\hlstd{yes2} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(yes2)}
+\hlstd{yes2[,} \hlnum{4}\hlstd{]} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{1}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{2}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{3}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,}
+    \hlnum{3}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{4}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{4}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{5}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{5}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{6}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{6}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{7}\hlstd{,}
+    \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{7}\hlstd{)),} \hlkwd{rep}\hlstd{(}\hlnum{8}\hlstd{,} \hlkwd{choose}\hlstd{(}\hlnum{8}\hlstd{,} \hlnum{8}\hlstd{)))}
+\hlstd{yes2[,} \hlnum{4}\hlstd{]} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(yes2[,} \hlnum{4}\hlstd{])}
+
+\hlstd{adjranks} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{1}\hlopt{:}\hlnum{8}\hlstd{,} \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{9}\hlopt{:}\hlnum{36}\hlstd{,}
+    \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{37}\hlopt{:}\hlnum{92}\hlstd{,} \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{93}\hlopt{:}\hlnum{162}\hlstd{,}
+    \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{163}\hlopt{:}\hlnum{218}\hlstd{,} \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{219}\hlopt{:}\hlnum{246}\hlstd{,}
+    \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{247}\hlopt{:}\hlnum{254}\hlstd{,} \hlnum{1}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{1}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{255}\hlopt{:}\hlnum{255}\hlstd{,}
+    \hlnum{1}\hlstd{])))}
+
+\hlstd{aicranks} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{1}\hlopt{:}\hlnum{8}\hlstd{,} \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{9}\hlopt{:}\hlnum{36}\hlstd{,}
+    \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{37}\hlopt{:}\hlnum{92}\hlstd{,} \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{93}\hlopt{:}\hlnum{162}\hlstd{,}
+    \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{163}\hlopt{:}\hlnum{218}\hlstd{,} \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{219}\hlopt{:}\hlnum{246}\hlstd{,}
+    \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{247}\hlopt{:}\hlnum{254}\hlstd{,} \hlnum{2}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{2}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{255}\hlopt{:}\hlnum{255}\hlstd{,}
+    \hlnum{2}\hlstd{])))}
+
+\hlstd{bicranks} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{1}\hlopt{:}\hlnum{8}\hlstd{,} \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{9}\hlopt{:}\hlnum{36}\hlstd{,}
+    \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{37}\hlopt{:}\hlnum{92}\hlstd{,} \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{93}\hlopt{:}\hlnum{162}\hlstd{,}
+    \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{163}\hlopt{:}\hlnum{218}\hlstd{,} \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{219}\hlopt{:}\hlnum{246}\hlstd{,}
+    \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{247}\hlopt{:}\hlnum{254}\hlstd{,} \hlnum{3}\hlstd{])),} \hlkwd{which}\hlstd{(rank[,} \hlnum{3}\hlstd{]} \hlopt{==} \hlkwd{min}\hlstd{(rank[}\hlnum{255}\hlopt{:}\hlnum{255}\hlstd{,}
+    \hlnum{3}\hlstd{])))}
+
+\hlstd{adjrvalues} \hlkwb{<-} \hlstd{yes2[adjranks, ]}
+\hlstd{aicbicvalues} \hlkwb{<-} \hlstd{yes2[aicranks, ]}
+
+\hlstd{adjrmodel} \hlkwb{<-} \hlstd{yes1[adjranks, ]}
+\hlstd{aicbicmodel} \hlkwb{<-} \hlstd{yes1[bicranks, ]}
+
+\hlstd{multiplot} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{...}\hlstd{,} \hlkwc{plotlist} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{file}\hlstd{,} \hlkwc{cols} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{layout} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
+    \hlkwd{require}\hlstd{(grid)}
+
+    \hlcom{# Make a list from the ... arguments and plotlist}
+    \hlstd{plots} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlkwd{list}\hlstd{(...), plotlist)}
+
+    \hlstd{numPlots} \hlkwb{=} \hlkwd{length}\hlstd{(plots)}
+
+    \hlcom{# If layout is NULL, then use 'cols' to determine layout}
+    \hlkwa{if} \hlstd{(}\hlkwd{is.null}\hlstd{(layout)) \{}
+        \hlcom{# Make the panel ncol: Number of columns of plots nrow: Number of rows}
+        \hlcom{# needed, calculated from # of cols}
+        \hlstd{layout} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{seq}\hlstd{(}\hlnum{1}\hlstd{, cols} \hlopt{*} \hlkwd{ceiling}\hlstd{(numPlots}\hlopt{/}\hlstd{cols)),} \hlkwc{ncol} \hlstd{= cols,}
+            \hlkwc{nrow} \hlstd{=} \hlkwd{ceiling}\hlstd{(numPlots}\hlopt{/}\hlstd{cols))}
+    \hlstd{\}}
+
+    \hlkwa{if} \hlstd{(numPlots} \hlopt{==} \hlnum{1}\hlstd{) \{}
+        \hlkwd{print}\hlstd{(plots[[}\hlnum{1}\hlstd{]])}
+
+    \hlstd{\}} \hlkwa{else} \hlstd{\{}
+        \hlcom{# Set up the page}
+        \hlkwd{grid.newpage}\hlstd{()}
+        \hlkwd{pushViewport}\hlstd{(}\hlkwd{viewport}\hlstd{(}\hlkwc{layout} \hlstd{=} \hlkwd{grid.layout}\hlstd{(}\hlkwd{nrow}\hlstd{(layout),} \hlkwd{ncol}\hlstd{(layout))))}
+
+        \hlcom{# Make each plot, in the correct location}
+        \hlkwa{for} \hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlstd{numPlots) \{}
+            \hlcom{# Get the i,j matrix positions of the regions that contain this subplot}
+            \hlstd{matchidx} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(}\hlkwd{which}\hlstd{(layout} \hlopt{==} \hlstd{i,} \hlkwc{arr.ind} \hlstd{=} \hlnum{TRUE}\hlstd{))}
+
+            \hlkwd{print}\hlstd{(plots[[i]],} \hlkwc{vp} \hlstd{=} \hlkwd{viewport}\hlstd{(}\hlkwc{layout.pos.row} \hlstd{= matchidx}\hlopt{$}\hlstd{row,} \hlkwc{layout.pos.col} \hlstd{= matchidx}\hlopt{$}\hlstd{col))}
+        \hlstd{\}}
+    \hlstd{\}}
+\hlstd{\}}
+\hlstd{pl1} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(yes2,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{255}\hlstd{,} \hlkwc{y} \hlstd{= yes2[,} \hlnum{1}\hlstd{],} \hlkwc{color} \hlstd{= yes2[,} \hlnum{4}\hlstd{]))} \hlopt{+} \hlkwd{geom_point}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{colour} \hlstd{= yes2[,}
+    \hlnum{4}\hlstd{]),} \hlkwc{size} \hlstd{=} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{ggtitle}\hlstd{(}\hlstr{"Adjusted R^2 Values of \textbackslash{}n Multiple Linear Regression Models"}\hlstd{)} \hlopt{+}
+    \hlkwd{ylab}\hlstd{(}\hlstr{"Adjusted R^2"}\hlstd{)} \hlopt{+} \hlkwd{xlab}\hlstd{(}\hlstr{"Model Number"}\hlstd{)} \hlopt{+} \hlkwd{labs}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"No. Added \textbackslash{}n Variables"}\hlstd{)}
+
+\hlstd{pl2} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(yes2,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{255}\hlstd{,} \hlkwc{y} \hlstd{= yes2[,} \hlnum{2}\hlstd{],} \hlkwc{color} \hlstd{= yes2[,} \hlnum{4}\hlstd{]))} \hlopt{+} \hlkwd{geom_point}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{colour} \hlstd{= yes2[,}
+    \hlnum{4}\hlstd{]),} \hlkwc{size} \hlstd{=} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{ggtitle}\hlstd{(}\hlstr{"Akaike Information Criterion Values of \textbackslash{}n Multiple Linear Regression Models"}\hlstd{)} \hlopt{+}
+    \hlkwd{ylab}\hlstd{(}\hlstr{"AIC"}\hlstd{)} \hlopt{+} \hlkwd{xlab}\hlstd{(}\hlstr{"Model Number"}\hlstd{)} \hlopt{+} \hlkwd{labs}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"No. Added \textbackslash{}n Variables"}\hlstd{)}
+
+\hlstd{pl3} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(yes2,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{255}\hlstd{,} \hlkwc{y} \hlstd{= yes2[,} \hlnum{3}\hlstd{],} \hlkwc{color} \hlstd{= yes2[,} \hlnum{4}\hlstd{]))} \hlopt{+} \hlkwd{geom_point}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{colour} \hlstd{= yes2[,}
+    \hlnum{4}\hlstd{]),} \hlkwc{size} \hlstd{=} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{ggtitle}\hlstd{(}\hlstr{"Bayesian Information Criterion Values of \textbackslash{}n Multiple Linear Regression Models"}\hlstd{)} \hlopt{+}
+    \hlkwd{ylab}\hlstd{(}\hlstr{"BIC"}\hlstd{)} \hlopt{+} \hlkwd{xlab}\hlstd{(}\hlstr{"Model Number"}\hlstd{)} \hlopt{+} \hlkwd{labs}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"No. Added \textbackslash{}n Variables"}\hlstd{)}
+\hlkwd{layout}\hlstd{(}\hlkwd{matrix}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{nrow} \hlstd{=} \hlnum{1}\hlstd{))}
+\hlkwd{multiplot}\hlstd{(pl1, pl2, pl3,} \hlkwc{cols} \hlstd{=} \hlnum{2}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: grid}}\end{kframe}
+\includegraphics[width=\maxwidth]{figure/data} 
+
+\end{knitrout}
+
+
+\begin{table}[ht]
+\begin{scriptsize}
+\centering
+\begin{tabular}{rrllllllllrrr}
+  \hline
+Variables & BMI & BPMed & Heart Rate & Tot Chol & Glucose & Education & Smoke & Diabetes & Adj $R^2$ & AIC & BIC \\ 
+  \hline
+        1 & YES & NO & NO & NO & NO & NO & NO & NO & 0.237966 & 38772.70 & 38804.67 \\ 
+     2 & YES & YES & NO & NO & NO & NO & NO & NO & 0.275382 & 38006.02 & 38044.29 \\ 
+     3 & YES & YES & YES & NO & NO & NO & NO & NO & 0.300141 & 37844.80 & 37889.45 \\ 
+     4 & YES & YES & YES & YES & NO & NO & NO & NO & 0.301882 & 37398.21 & 37449.15 \\ 
+     5 & YES & YES & YES & YES & YES & NO & NO & NO & 0.30543 & 34387.96 & 34444.50 \\ 
+     6 & YES & YES & YES & YES & YES & YES & NO & NO & 0.306995 & 33499.77 & 33574.84 \\ 
+     7 & YES & YES & YES & YES & YES & YES & YES & NO & 0.307125 & 33500.04 & 33581.37 \\ 
+     8 & YES & YES & YES & YES & YES & YES & YES & YES & 0.306962 & 33501.94 & 33589.52 \\  
+   \hline
+   \end{tabular}
+\caption{Multiple Linear Regression Models for Maximum Adjusted $R^2$}
+\end{scriptsize}
+\end{table}
+
+   \begin{table}[ht]
+   \begin{scriptsize}
+\centering
+\begin{tabular}{rrlllllllllrr}
+  \hline
+  Variables & Glucose & Education & BP Med & BMI & Heart Rate & Tot Chol & Smoking Status & Diabetes & Adj $R^2$ & AIC & BIC \\ 
+  \hline
+  1 & YES & NO & NO & NO & NO & NO & NO & NO & 0.237966 & 38772.70 & 38804.67 \\ 
+     2 & YES & YES & NO & NO & NO & NO & NO & NO & 0.275382 & 38006.02 & 38044.29 \\ 
+     3 & YES & YES & YES & NO & NO & NO & NO & NO & 0.300141 & 37844.80 & 37889.45 \\ 
+     4 & YES & YES & YES & YES & NO & NO & NO & NO & 0.301882 & 37398.21 & 37449.15 \\ 
+     5 & YES & YES & YES & YES & YES & NO & NO & NO & 0.30543 & 34387.96 & 34444.50 \\ 
+     6 & YES & YES & YES & YES & YES & YES & NO & NO & 0.306995 & 33499.77 & 33574.84 \\ 
+     7 & YES & YES & YES & YES & YES & YES & YES & NO & 0.307125 & 33500.04 & 33581.37 \\ 
+     8 & YES & YES & YES & YES & YES & YES & YES & YES & 0.306962 & 33501.94 & 33589.52 \\ 
+   \hline
+\end{tabular}
+\caption{Multiple Linear Regression Models for Minimum AIC and BIC)}
+\end{scriptsize}
+\end{table}
+
+
+
+\end{document}
