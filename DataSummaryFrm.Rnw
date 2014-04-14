@@ -3,6 +3,7 @@
 \documentclass{article}
 \usepackage{graphicx}
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \title{Group Project \\ Framingham Heart Study}
 \author{}
 \maketitle
