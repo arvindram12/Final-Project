@@ -1,0 +1,162 @@
+
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\begin{document}
+\title{Regression Tree - Framingham Heart Study data}
+\author{Sangsoo Park (D)}
+\maketitle
+\write18{wget https://github.com/arvindram12/Final-Project/blob/master/Validation.png}
+\write18{wget https://github.com/arvindram12/Final-Project/blob/master/Comparison_tee.png}
+
+\section{What is Regression Tree?}
+
+  Regression tree analysis has been used to understand underlying structures of data to predict a continuous outcome variable. The analysis divides data into sub-groups using binary branches, which indicates partioning of observations of an outcome variable based on predictor variables. 
+  There are two benefits using the analysis. The first one is that results from the analysis are simple to understand. Another one is that we don't need to assume linearlity relationship between an ouctcome variable and predictor variables that a multiple linear regression model has.
+  
+$$E = \sum_{i=1}^{n}(y_i - \hat{y})^2$$
+
+Equation 1. $\hat{y}$ indicates predicted mean value of all obeservations by a regression tree model and $n$ is the number of observations at a node
+
+
+
+In the analysis, Regression tree makes splits that minimize sum of squared error between $y_i$ and $\hat{y}$ at a node. This process is repeated using meaningful predictor variables that can greatly improve accuracy of the tree (least squares) until a minimum size of the end sub-groups is reached or no longer improvements in the accuracy of adding splits are showen.Thus, we need to have decision criteria for not only stopping criteria of the analysis but also having proper results without overfitting data. More details will be explained in the validation of the result section. 
+
+\section{Methods}
+
+\subsection{Data filtering}
+
+  Five categorical and six continuous variables were selected because of our groups initial decision on what variables we are going to use. The 11 variables were extracted from the original dataset and the new dataset (frm2) was used for regression tree analysis.
+  
+<<data (frm2), eval=FALSE, echo=FALSE>>=
+require(ggplot2)
+require(RCurl)
+require(rpart)
+require(rpart.plot)
+
+data <- getURL("https://raw.githubusercontent.com/arvindram12/Final-Project/master/frmgham2.csv",ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'framingham.csv')
+frm<-read.csv('framingham.csv')
+frm$RANDID<-as.factor(frm$RANDID)
+frm1<-frm[which(!duplicated(frm$RANDID)),]
+frm2 <- data.frame(as.factor(frm1$SEX), as.factor(frm1$DIABETES), 
+              as.factor(frm1$BPMEDS),as.factor(frm1$CURSMOKE),
+              as.factor(frm1$educ), frm1$AGE, frm1$TOTCHO, frm1$BMI,frm1$GLUCOSE, 
+               frm1$HEARTRTE, frm1$SYSBP) 
+names(frm2) <- c("SEX","DIABETES", "BPMEDS", "CURSMOKE","educ","AGE",
+                    "TOTCHOL","BMI","GLUCOSE","HEARTRTE","SYSBP")
+@
+
+
+\subsection{Regression tree analysis}
+
+  First, 10 variables were used to predict systolic blood pressure (SYSBP). The numbers at the terminal are mean systolic blood pressures of the number of observations falling in each terminal.To start, the initial cp value was set to 0.005, which might result in overfitting of the data. 
+  There were missing values in the outcome and predictor variables. If the outcome variable has missing values, all observations from the predictors were removed. However, outcome variable values were kept when one or more predictor variables have missing values.
+  
+<<Regression tree, eval=FALSE, echo=FALSE>>=
+
+# "anova" = when outcome variable is continuous with cp=0.005
+# na.action = default (explained above)
+fit <- rpart(SYSBP~., data=frm2, method="anova", cp=0.005)
+
+# Visualize tree
+rpart.plot(fit,digits = 2, extra=1)
+
+@
+
+\subsection{Validation of the result}
+
+    Keep adding more splits results in increase in R-squared even though it could just result from adding more splits. This is what we saw in the multiple regression model. To avoid this overfitting problem, we need decision criteria on the appropriate number of splits. 
+  
+  The cp indicates complexity parameter that allows us to decide the number of meaningful splits (cost of adding one additional split).To be specific, higher cp values lead to smaller number of splits. 
+  
+  There is a rule to decide the number of splits based on the complexity parameter: 1-SE rule. Based on the rule, we can decide the first largest value of cp when xerror is smaller than summation of minimum value of xerror and xstd. When there are 11 splits, the summated value is 0.807. The largest cp value when the xerror is smaller than 0.807 was 0.01. Based on this result, pruned tree model was generated.
+  
+We can check what the 1-SE means through several plots. There were plots that show how changes in the cp value affect cross-validate R-square values and cross validation errors. 
+  
+First, we can see the number of splits where the overall R-squared value is not increased more by increase in cp values after 6 splits (See Figure 1.Bottom left).
+  
+Second, after the size of tree is larger than 6, there were no further improvements in the X-val relative error while the cp values increase (See Figure 1.Top and Bottom right).
+  
+Taken together, six splits based on the 1-SE rule was appropriate (cp=0.01). 
+  
+\begin{figure}[h]
+\begin{center}
+    \centering
+    \includegraphics[width=1\textwidth]{Validation.png}
+    \caption{Decision on the number of splits (Top: X-Val Relative error change as a function of cp, Bottom Right: R-squared value, Bottom left: X Relative Error)}
+    \label{Figure 1.}
+\end{center}
+\end{figure}
+
+
+<< Decision, eval=FALSE, echo=FALSE>>=
+# Show results
+printcp(fit)
+
+# Cross-Validation results
+# graphics.off()
+#plotcp(fit)
+
+#687*363
+layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))
+par(oma=c(1,1,0,0), mar=c(2,2,1,0), tcl=-0.1, mgp=c(1,0,0))
+plotcp(fit)
+
+rsq.rpart(fit)
+
+#par(mfrow=c(1,2))
+
+
+# Based on cp value, prune the tree to avoid overfitting
+# from printcp(fit)
+pr_fit<- prune(fit, cp=0.01) 
+
+@
+
+
+\subsection{Comparison}
+
+  The original tree was pruned based on the 1-SE rule.The original tress used four variables to predict systolic blood pressure with 11 splits. The pruned tres also used the same four variables to predict the outcome variable but it used smaller number of splits (6 splits vs 11 splits).The pruned and the original tree were visualized to see difference between the two trees (See Figure 2).
+  
+\begin{figure}[h]
+\begin{center}
+    \centering
+    \includegraphics[width=1\textwidth]{Comparison_tree.png}
+    \caption{Original Tree vs Pruned Tree. Numbers at the terminal nodes indicate mean systolic blood pressure of the number of subjects that is falling into the terminal node, n = number of subjects. If answer to condition in the circle is yes, you can go the left branch.} 
+    \label{Figure 2.}
+\end{center}
+\end{figure}
+
+<<Comparison, eval=FALSE, echo=FALSE>>=
+ 
+par(mfrow=c(1,2), oma=c(1,1,0,0), mar=c(2,2,1,0), tcl=-0.1, mgp=c(1,0,0))
+rpart.plot(fit,digits = 2, extra=1)
+title("Original Tree")
+rpart.plot(pr_fit,digits = 2, extra=1)
+title("Pruned Tree")
+
+# Show Summary of the pruned tree
+# summary(pr_fit)
+# Show residuals
+summary(residuals(pr_fit))
+plot(predict(pr_fit), residuals(pr_fit))
+
+@
+
+\subsection{Multiple linear regression}  
+
+Multiple linear regression analysis was performed with the same variables that the regression tree used. Results from the multiple regression gives us how an single outcome variable is changed with one unit increase in one of predictor variables while other predictor variables remain constant. It is difficult to visualize the multi-dimensional results and see interactions between the predictor variables.
+
+In this context, benefit of the regression tree model is to have better understanding on data set by binar branches or splits for innate interactions between the predicor variables. 
+
+Another benefit of the tree model might give us starting point to build reliable multiple regression models. We can add the same predictor variables that the tree model found to build a multiple regression model. The predictor variables in the multiple regression model showed all significant p-values.
+
+In terms of accuracy, the multiple linear regression analysis showed higher R-square value (0.3 vs 0.23 from relative error). This could originate from the fact that the current data set has linear relationships, which results in higher R-square value from the multiple linear regression model. 
+
+<<Multiple regression, eval=FALSE, echo=FALSE>>=
+
+mlr <- lm(SYSBP~AGE+BMI+BPMEDS+HEARTRTE, data=frm2)
+summary(mlr)
+@
+
+\end{document}
