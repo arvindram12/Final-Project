@@ -1,0 +1,128 @@
+Model Selection Metrics
+========================================================
+### Biostatistics Methods 2, UMass-Amherst, Spring 2014
+### by Eric Reed
+
+The purpose of this lab is to compare three model selection metrics, Adjusted R^2, Aikake Informtion Criteria, and Bayesian Information Criteria. These metrics are used to test the predictive value of proposed linear models.
+
+This lab will use 7 variables from data collected for the "Framingham Heart Study": "Systolic Blood Pressure", "Age", "Sex" "Glucose Level", "Body Mass Index", "Blood Pressure Medication Status", "Smoking Status", and "Diabetes Status".
+
+```{r}
+require(RCurl)
+require(plyr)
+require(ggplot2)
+data <- getURL("https://raw.githubusercontent.com/arvindram12/Final-Project/master/ReedLabData.csv",ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'framingham.csv')
+frm<-read.csv('framingham.csv')
+frm$SEX<-as.factor(frm$SEX)
+frm$CURSMOKE<-as.factor(frm$CURSMOKE)
+frm$DIABETES<-as.factor(frm$DIABETES)
+frm$BPMEDS<-as.factor(frm$BPMEDS)
+
+```
+
+The first step is to build different models and run the three selection metrics on each one.
+To perform this we will use the SelTest() function, shown below.  This function will generate different models of desired variables that we wish to test, assuming linearity of each variable and the outcome variable.
+
+This function requires 4 inputs.
+
+The first input is the outcome variable, for which we will to build a linear models to predict. The second, is the set of variables that will be included in every model. This is important because it is common practive to always include certain variables, even if there has been no apparent association between this variable and the outcome or other covariates. The third, is the set of variables we wish to test. And the finalinput, specifies the dataset we are pulling out data from.
+
+It will output three lists.  The First, is a list of the names of the coefficients in each model. The second, is a three column matrix, with the Adjusted R^2, AIC, and BIC values, respectively down each column for each model. The third is a list of the lm() outputs for each model.
+```{r}
+SelTest<-function(outcome,need,test,data){
+  out1<-data[,outcome]
+  need1<-as.data.frame(data[,need])
+  colnames(need1)<-colnames(data[need])
+  test1<-data[,test]
+  x<-1:ncol(test1)
+  combn1<-function(x,y){combn(y,x)}
+  dee<-lapply(x, combn1, y=x)
+  elem<-function(x,y,z){
+    test2<-as.data.frame(x=z[,x])
+    colnames(test2)<-colnames(z[x])
+      mat<-as.data.frame(cbind(test2,need1))
+      lm(y~.,data=mat)}
+  what<-function(c){
+    apply(dee[[c]],2,elem,y=out1,z=test1)}
+    model<-as.list(lapply(x,what))
+  model1<-unlist(model, recursive=FALSE)
+  call<-function(x){
+    sum<-summary(x)
+    sum$adj.r.squared}
+call1<-function(x){
+  names(x$coef)}
+  coef<-lapply(model1, call1)
+coef1<-lapply(coef,rbind)
+
+ coef2<-rbind.fill.matrix(coef1)
+  adjr<-lapply(model1,call)
+adjr1<-do.call(rbind,adjr)
+  aics<-lapply(model1, AIC)
+aics1<-do.call(rbind,aics)
+  bics<-lapply(model1, BIC)
+bics1<-do.call(rbind,bics)
+frame<-as.data.frame<-cbind(adjr1,aics1,bics1)
+colnames(frame)<-c("Adj R^2", "AIC", "BIC")
+list(coef2,frame,model1)
+}
+
+
+```
+
+In this lab we will use "Systolic Blood Pressure"", as our outcome variable.  In every model we will include "Age", and "Sex".  And, we will test models with different combinations of "Glucose Level", "Body Mass Index", "Blood Pressure Medication Status", "Smoking Status", and "Diabetes Status".
+```{r}
+mod<-SelTest(outcome="SYSBP", need=c("AGE", "SEX"), test=c("GLUCOSE", "BMI", "BPMEDS", "CURSMOKE", "DIABETES"), data=frm)
+nrow(mod[[2]])
+```
+Now, we can see that there are 31 different linear models that we could make that include at least one of the added test variables.  We can view the results of our three selection metrics, by viewing the second list in our SelTest output.
+```{r}
+mets<-mod[[2]]
+mets
+mets<-as.data.frame(mets)
+mets[,4]<-as.factor(c(rep(1,choose(5,1)),rep(2,choose(5,2)), rep(3,choose(5,3)),rep(4,choose(5,4)),rep(5,1)))
+colnames(mets)[4]<-"No. Vars"
+```
+As expected, we can not that there are different values returned by each metric.  Now we want to explore how each model aggrees and differs as to predictive value of each model. To do so we can assign ranks to each model, and plot them. Note, that higher adjusted R^2 values,and lower AIC and BIC values are indicative to better predictive value.
+```{r fig.width=11, fig.height=6}
+rank<-as.data.frame(cbind(nrow(mets)+1-rank(mets[,1]),rank(mets[,2]), rank(mets[,3])))
+p <- ggplot() + 
+  geom_point(data = rank, aes(x = 1:nrow(mets), y = rank[,1],shape="Adj. R^2", colour=mets[,4])) +
+  geom_point(data = rank, aes(x = 1:nrow(mets), y = rank[,2],shape="AIC", colour=mets[,4])) +
+  geom_point(data = rank, aes(x = 1:nrow(mets), y = rank[,3],shape="BIC", colour=mets[,4])) +
+  scale_shape_manual("Selection Metric",
+                      breaks = c("Adj. R^2", "AIC", "BIC"),
+                      values = c(16, 0, 4)) +
+  labs(colour = "No. Added \n Variables")+
+  xlab('Model Number') +
+  ylab('Model Rank')+ ggtitle("Ranks  of Models for 3 Model Selection Metrics")
+p
+```
+If each metric was assigning predictive value relative to the other possible models in the same way, what would we expect to see in the scatterplot? What do we see instead?
+
+Lastly, let's observe the models that each metric predicts to have the best predictive values, per number of added variables.
+```{r}
+vars<-mod[[1]][,-1]
+
+rsq<-aggregate( mets[,1], by=list(vars=mets[,4]), FUN=max)
+rsq[,3]<-which(mets[,1]%in%rsq[,2])
+rsq<-as.data.frame(cbind(rsq,vars[which(mets[,1]%in%rsq[,2]),]))
+colnames(rsq)[2:10]<-c("Adj R^2","Model No.",1,2,3,4,5,6,7)                   
+
+aic<-aggregate( mets[,2], by=list(vars=mets[,4]), FUN=min)
+aic[,3]<-which(mets[,2]%in%aic[,2])
+aic<-as.data.frame(cbind(aic,vars[which(mets[,2]%in%aic[,2]),]))
+colnames(aic)[2:10]<-c("AIC","Model No.",1,2,3,4,5,6,7) 
+
+bic<-aggregate( mets[,3], by=list(vars=mets[,4]), FUN=min)
+bic[,3]<-which(mets[,3]%in%bic[,2])
+bic<-as.data.frame(cbind(bic,vars[which(mets[,3]%in%bic[,2]),]))
+colnames(bic)[2:10]<-c("BIC","Model No.",1,2,3,4,5,6,7) 
+
+rsq
+aic
+bic
+```
+
+How do the three metrics differ in there selection for the best model per number of variables? What model does each metric predict to have the best overall predictive value?
+
