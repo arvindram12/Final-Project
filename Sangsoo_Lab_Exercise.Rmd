@@ -1,0 +1,139 @@
+Lab Exercise : Regression Tree
+========================================================
+### Sangsoo Park (D)
+#### Spring 2015, Biostatistics Methods 2, UMass-Amherst
+
+The aim of this lab is to allow you to understand how to create regression tree model to predict a continuous outcome variable using multiple predictor variables. Regression tree encourages you to understand which predicor variables are important to predict an outcome variable. 
+
+The dataset we will use is a portion of the Framingham Heart study in the class google drive. Systolic blood pressure (SYSBP) will be as an outcome variable and the other 10 variables will be predictor variables in this lab exercise.
+
+During this class, each group will decide what outcome and predictor variables each group wants to focus and at the end of class, each group will hand in a figure of a regression tree model with meaningful interpretations.
+
+### Loading the dta
+
+```{r, message=FALSE}
+require(RCurl)
+
+data <- getURL("https://raw.githubusercontent.com/arvindram12/Final-Project/master/frmgham2.csv",ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'framingham.csv')
+frm<-read.csv('framingham.csv')
+frm$RANDID<-as.factor(frm$RANDID)
+frm1<-frm[which(!duplicated(frm$RANDID)),]
+frm2 <- data.frame(as.factor(frm1$SEX), as.factor(frm1$DIABETES), 
+              as.factor(frm1$BPMEDS),as.factor(frm1$CURSMOKE),
+              as.factor(frm1$educ), frm1$AGE, frm1$TOTCHOL, frm1$BMI,frm1$GLUCOSE, 
+               frm1$HEARTRTE, frm1$SYSBP) 
+names(frm2) <- c("SEX","DIABETES", "BPMEDS", "CURSMOKE","educ","AGE",
+                    "TOTCHOL","BMI","GLUCOSE","HEARTRTE","SYSBP")
+
+# consists of 5 categorical and 6 numerical variables
+str(frm2)
+```
+
+### Principle of Regression Tree
+
+$$E = \sum_{i=1}^{n}(y_i - \hat{y})^2$$
+
+Equation 1. $\hat{y}$ indicates predicted mean value of all obeservations by a regression tree model and $n$ is the number of observations at a node
+
+Regression tree makes splits that minimize sum of squared error between $y_i$ and $\hat{y}$ at a node. The number of nodes (# of splits + 1) is always larger than the number of splits. 
+
+The analysis starts to find out $E$ without any splits. The next step is to find a predictor variable that can produce significant decrease in $E$ by a binary split. Threshold to define the significant decrease might be set in the analysis. The threshold and the minimum number of overvations at terminal nodes are two stopping criteria of the analysis. However, it is difficult to define the two criteria.
+
+To resolve the issue, we can run the analysis without any stopping criteria and then can perform cross-validation analysis to find the best result of the analysis. 
+
+
+### Regression Tree analysis using "rpart" package
+
+To start, the initial cp value was set to 0.005, which might result in overfitting of the data (you can start without any preset cp value). 
+
+There were missing values in the outcome and predictor variables of the dataset. If the outcome variable has missing values and all predictor values are missing, the row is removed. 
+
+```{r, message=FALSE}
+require(rpart)
+require(rpart.plot)
+
+# "anova" = when outcome variable is continuous
+# complexity parameter (cp) = 0.005 (Arbitrary decided, small value)
+# na.action = default (explained above)
+fit <- rpart(SYSBP~., data=frm2, method="anova", cp=0.005)
+
+# Visualize tree
+rpart.plot(fit,digits = 2, extra=1)
+```
+
+The 'n' indicates the number of observations that are included in each terminal and the three digit values are mean of the observations. For example, if overvations are younger than 52yr, have BMI lower than 25, and then younger than 44yr, mean systolic blood pressure of them is 118 (Normal range) and there are 675 observations. 
+
+
+### Summary of the overall fit of the model
+
+Only four predictor variables were used to construct the regression tree. 
+
+Root node error is calculated by sum of squared error without any splits (See Equation 1) over the total number of observations (4434).
+
+--- Table explanation ---
+
+cp : Complexity parameter and higher cp values lead to smaller number of splits. 
+
+nsplit : The number of splits that the model made.
+
+rel error : Normalized errors at the number of splits by errors that come from no splits (nsplit=0, here 2228593 => 1). 
+
+xerror : cross-validation error and also normalized
+
+xstd : standard deviation of xerror
+
+The last three variables : To decide the number of splits (1-SE rule)
+
+```{r}
+printcp(fit)
+# Residuals if you want to look
+#sum((residuals(fit, type = c("deviance")))^2)
+#summary(residuals(fit))
+#plot(predict(fit),residuals(fit))
+
+# returns predicted values from a fitted rpart object
+#table(predict(fit, type="matrix"))
+
+```
+
+
+### Cross-Validation of the result to find out the best model
+
+Keep adding more splits results in increase in R-squared even though it could just result from adding more splits. This is what we saw in the multiple regression model. To avoid this overfitting problem, we need decision criteria on the appropriate number of splits.
+
+we can decide the number of splits using results from cross-validation.
+
+```{r, message=FALSE}
+par(mfrow=c(1,2))
+rsq.rpart(fit)
+```
+  
+The minimum number of splits was defined by the plot of changes in X-val relative error (cross validation relative error) as a function of cp values. After the size of tree is larger than 6, there were no further improvements in the X-val relative error while the cp values increase.
+
+```{r, message=FALSE}
+plotcp(fit)
+```
+
+The dot line indciates the first largest value of cp when xerror is smaller than summation of minimum value of xerror and xstd (1-SE rule). When there are 11 splits, the summated value is 0.807. The largest cp value when the xerror is smaller than 0.807 occured at cp=0.01. Based on this result, 0.01 for the cp value were decided to generate the best tree model.
+
+### Prune the tree
+
+Based on the decision, we are going to prune the original tree model to avoid overfitting the data.
+
+```{r}
+# Prune the original tree model
+pr_fit<- prune(fit, cp=0.01) 
+
+# Compare the original tree model with the pruned tree model
+par(mfrow=c(1,2))
+rpart.plot(fit,digits = 2, extra=1)
+title("Original Tree")
+rpart.plot(pr_fit,digits = 2, extra=1)
+title("Pruned Tree")
+```
+
+### Group exercise
+Please decide what variables your group will use to run the regression tree analysis. A group that generates a meaningful tree model with appropriate interpretation will have 5 extra points (ex. what decision criteria are used, cross-validation process, and interpretation of results) 
+
+
