@@ -151,7 +151,7 @@ In this context, benefit of the regression tree model is to have better understa
 
 Another benefit of the tree model might give us starting point to build reliable multiple regression models. We can add the same predictor variables that the tree model found to build a multiple regression model. The predictor variables in the multiple regression model showed all significant p-values.
 
-In terms of accuracy, the multiple linear regression analysis showed higher R-square value (0.3 vs 0.23 from relative error). This could originate from the fact that the current data set has linear relationships, which results in higher R-square value from the multiple linear regression model. 
+In terms of accuracy, the multiple linear regression analysis showed higher R-square value (0.3 vs 0.22 from relative error). This could originate from the fact that the current data set has linear relationships, which results in higher R-square value from the multiple linear regression model. 
 
 <<Multiple regression, eval=FALSE, echo=FALSE>>=
 

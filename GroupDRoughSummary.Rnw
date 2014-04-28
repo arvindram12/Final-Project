@@ -1,13 +1,17 @@
 
 
 \documentclass{article}
+\usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
+\usepackage{wrapfig}
 \begin{document}
-\title{Group Project \\ Framingham Heart Study\\ Arvind Ramakrishnan \\ Eric Reed \\ Sangsoo Park}
-\author{}
+\title{Group Project \\ Framingham Heart Study}
+\author{Arvind Ramakrishnan \\ Eric Reed \\ Sangsoo Park}
 \maketitle
-\write18{wget https://github.com/arvindram12/Final-Project/blob/master/Rplot.pdf}
-<<data>>=
+\tableofcontents
+\write18{wget https://github.com/arvindram12/Final-Project/blob/master/Rplot01.png}
+\newpage
+<<data, eval=FALSE, echo=FALSE>>=
 
 require(ggplot2)
 require(RCurl)
@@ -23,65 +27,73 @@ frm<-read.csv('framingham.csv')
 
 \subsection{Observations}
 
-In total there were 11,627 observations made, however, there were multiple observations made for each individual in the study, as was evident that multiple observations had the same ID number.  Therefore, we filtered the data to include just the first observation for each study participant.
+In total the data set contained 11,627 observations. However, there were multiple observations made for each individual in the study, as was evident that multiple observations had the same ID number.  Therefore, we filtered the data to include just the first observation for each study participant. We are left with one observation for each of the 4,434 study participants, which leaves us with a fairly large dataset.
 
-<<bb>>=
+<<bb, eval=FALSE, echo=FALSE>>=
 frm$RANDID<-as.factor(frm$RANDID)
 frm1<-frm[which(!duplicated(frm$RANDID)),]
 nrow(frm1)
 @
-Here, we are left with one observation for each of the 4,434 study participants, which leaves us with a fairly large dataset.
+
 
 \subsection{Variables}
 
-In total, the dataset is comprised of 39 variables, of which our analysis will focus on 13. Of these 13 variables 8 are continuous and 5 are categorical.
+In total, the dataset is comprised of 39 variables, of which our analysis will focus on 13. Of these 13 variables 8 are continuous and 5 are categorical.  Summary statistics of all variables are demonstrated in table 1.
+
+\begin{table}[ht]
+\begin{scriptsize}
+\centering
+\begin{tabular}{rllllll}
+  \hline
+ Continuous Variables &  &  &  &  & \\ 
+ \hline
+    & Unit & Mean & Standard Deviation & Median & No. Missing   \\ 
+   Total Cholesterol & $mg/dl$ &  236.98 & 44.65 & 234 & 52    \\ 
+   Age & $years$ & 49.93 & 8.68 & 49 & 0   \\ 
+   Systolic Blood Pressure & $mm Hg$ & 132.91 & 22.42 & 129 & 0   \\ 
+   Diastolic Blood Pressure & $mm Hg$ & 83.08 & 12.06 & 82 & 0  \\ 
+   Cigarettes Per Day & $quantity$ & 8.97 & 11.93 & 0 & 32  \\ 
+  Body Mass Index & $kg/m^2$ & 25.85 & 4.10 & 25.45 & 19   \\ 
+ Heart Rate & $beats/min$ & 75.89 & 12.11 & 75 & 1  \\ 
+   Glocuse Level & $mg/dL$ & 82.19 & 24.40 & 78 & 397   \\ 
+    \hline
+   Categorical Variables & & & &  & \\ 
+    \hline
+    & Male & Female & No. Missing & &  \\ 
+   Sex & 43.84\% & 56.16\% & 0 & &\\ 
+   \hline
+   & No & Yes & No. Missing & &  \\ 
+   Smoking Status & 50.81\% & 49.19\% & 0 & &  \\ 
+   Diabetes Status & 97.27\% & 2.73\% & 0 & &  \\ 
+   Blood Pressure Med. Status & 96.71\% & 3.29\% & 61 & &   \\ 
+   \hline
+   &  Gr. 1-11 & HS Diploma/GED &  Some College & College Degree & No. Missing \\ 
+   Education & 43.17\% & 29.65\% & 16.57\% & 11.62\% & 113 \\ 
+   \hline
+\end{tabular}
+\caption{Summary Statistics of 13 Variables in the Framingham Heart Study}
+\end{scriptsize}
+\end{table}
 
 \subsubsection*{Continous Variables}
 
-  \begin{enumerate}
-  
-\item Total Cholestrol ($mg/dL$) | ``TOTCHOL"
+The study participants ranged in age from 32 to 70-years-old, with a mean of 49.94-years-old.
 
-\item Age ($years$) | ``AGE"
-
-\item Systolic blood pressure ($mmHg$) | ``SYSBP" 
-
-\item Diastolic blood pressure($mmHg$) | ``DIABP"
-
-\item Cigarettes Per Day | ``CIGPDAY"
-
-\item BMI : Body Mass Index ($kg/m^2$) | ``BMI"
-
-\item Heart Rate ($beats/min$) | ``HEARTRTE"
-
-\item Glucose ($mg/dL$) | ``GLUCOSE"
-
-\end{enumerate}
+The majoroty of the contrinuous variables demonstrated apparent symmetry.  The greatest departure from linearity was demonstrated by the smoking data. Notice that the mean for "Cigarettes Per Day" was 8.97, while the median was 0.  This demonstrates that the majority of the particiants were most likely non-smokers. 
 
 \subsubsection*{Categorical Variables}
+The data demonstrates that the study included a close-to equal number of men and women, 43.84\% and 56.16\% respeactively, as well as the number of non-smokers to smokers, 50.81\% and 49.19\% repectively.  Diabetes status and blood pressure medication status, showed a much greater departure from equality, and over 95\% in each were of negative status. Interestingly, almost half, 43.17\%, of the participants did not have a high school diploma.   
 
-\begin{enumerate}
 
-\item Sex ($1=Male$, $2=Female$) | "SEX"
 
-\item Current Smoker? ($0=No$, $1=Yes$) | "CURSMOKE"
-
-\item Diabetic? ($0=No$, $1=Yes$) | "DIABETES"
-
-\item Currently on Blood Pressure Medication? ($0=No$, $1=Yes$) | "BPMEDS"
-
-\item Education ($1=Grades\:1-11$, $2=High\: School\: Diploma\: or\: GED$, $3=Some\:College$, $4=College\:Degree$) | "educ"
-
-\end{enumerate}
-
-<<cc>>=
+<<cc, eval=FALSE, echo=FALSE>>=
 frm2<-frm1[,1:14]
 @
 
 \subsection{Missing Data}
 
 
-<<bb2>>=
+<<bb2, eval=FALSE, echo=FALSE>>=
 # Check the number of missing values of the continuous varaibles
 sum(complete.cases(frm2))
 sum(is.na(frm2$SEX))
@@ -101,105 +113,37 @@ sum(is.na(frm2$educ))
 @
 Of the 4434 observations in our data, 3,826 of them have complete data. We are missing 52 observations for total cholesterol, 32 obervations for cigarettes per day, 19 observations for BMI, 61 observations for blood pressure medication, 1 observation for heart rate, 397 observations for glucose, and 113 observations for education.
 
-\subsection{Distributions of Continuous Variables}
-
-\subsubsection*{Total Choesterol}
-<<dd>>=
-hist(frm1$TOTCHOL)
-@
-The data for total choesterol appears to be normally distributed
-
-\subsubsection*{Age}
-<<ee>>=
-hist(frm1$AGE)
-@
-The data for age, has no obvous distribution, though it does taper of at either tail.
-
-\subsubsection*{Systolic Blood Pressure}
-
-<<ff>>=
-hist(frm1$SYSBP)
-@
-The data for systolic blood pressure appears positively skewed.
-
-\subsubsection*{Diabolic Blood Pressure}
-<<gg>>=
-hist(frm1$DIABP)
-@
-The data for diaboloic blood pressure appears normally distributed, though it seems a little positively skewed.
-
-\subsubsection*{Cigarettes per Day}
-
-<<hh>>=
-hist(frm1$CIGPDAY)
-@
-The frequency of cigarettes per day, appears to decrease as the number of cigarettes increases.
-
-
-\subsubsection*{Body Mass Index}
-<<jj>>=
-hist(frm1$BMI, breaks=50)
-@
-The data for body mass index appears normally distributed, though it may be postively skewed.
-
-\subsubsection*{Heart Rate}
-
-<<kk>>=
-hist(frm1$HEARTRTE, breaks=20)
-@
-The data for heart rate appears normally distributed, though it may be positively skewed.
-
-\subsubsection*{Glucose}
-<<ii>>=
-hist(frm1$GLUCOSE, breaks=40)
-@
-The data for glucose appears slightly positively skewed, with positive outliers on the postive end. 
-
-
 \section{Candidate Continuous Variables for Linear Regression}
 
 In the following example I utilized the GGally package to create a matrix of plots and correlational ceofficients for candidate continuous predictor and outcome variables, after removing observations with missing data.
-\begin{figure}[h]
-\begin{center}
-    \centering
-    \includegraphics[width=1\textwidth]{Rplot.pdf}
-    \caption{Plot and Correlational Matrix of Continuous Variables}
-    \label{fig:awesome_image}
-\end{center}
-\end{figure}
-\newpage
 
-From the figure we can see that the most consistent correlation between one variable and the others seems to be Systolic Blood pressure.  This is a good outcome variable because it intuitively makes sense as an outcome, whereas other variables such as BMI occur in a large part due to environmental factors that aren't factored into this study such as diet. Originally, Total Cholestrol was considered as the outcome variable, however it has relatively weak correlation with many of the factors of interest. Systolic Blood Pressure has the strongest correlation with Diabolic Blood Pressure, however this is a relatively uninteresting relationship to study as it they can be considered more or less colinear. We can move on instead to the next highest correlation which is BMI.
-\subsection{Simple Linear Regression Analysis of Systolic Blood Pressure vs. BMI}
-<<dd4>>=
-m1<-lm(SYSBP~BMI, data=frm2)
-summary(m1)
-qplot(BMI, SYSBP, data=frm2) + geom_smooth(method="lm",se=TRUE)
-@
-From our simple linear modeling summary we can see a conclude that there is an association between systolic blood pressure and BMI.  The adjusted $R^2$ is relatively low.  It would be interesting to see then the effect of adding new variables to our model.
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrrrrrrr}
+  \hline
+ & TOTCHOL & AGE & SYSBP & DIABP & CIGPDAY & BMI & HEARTRTE & GLUCOSE \\ 
+  \hline
+TOTCHOL & 1.00 & & & & & & & \\ 
+  AGE & 0.25 & 1.00 & & & & & & \\ 
+  SYSBP & 0.21 & 0.40 & 1.00 & & & & & \\ 
+  DIABP & 0.17 & 0.20 & 0.78 & 1.00 & & & & \\ 
+  CIGPDAY & -0.03 & -0.19 & -0.10 & -0.06 & 1.00 & & & \\ 
+  BMI & 0.12 & 0.13 & 0.32 & 0.38 & -0.10 & 1.00 & & \\ 
+  HEARTRTE & 0.10 & -0.01 & 0.18 & 0.19 & 0.07 & 0.08 & 1.00 & \\ 
+  GLUCOSE & 0.05 & 0.12 & 0.13 & 0.05 & -0.06 & 0.09 & 0.09 & 1.00 \\ 
+   \hline
+\end{tabular}
+\caption{Correlation Matrix of 8 Continuous Variables in the Framingham Heart Study}
+\end{table}
 
-\subsection{Linear Regression of Systolic Blood Pressure vs. Interactions with Sex}
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{Rplot01.png}
+  \end{center}
+  \caption{ }
+\end{wrapfigure}
 
-<<dd2>>=
-# Convert data type of SEX variable from integer to factor 
-frm1_du <- frm1
-frm1_du$SEX <- as.factor(frm1_du$SEX)
+From the figure we can see that the most consistent correlation between one variable and the others appears to be Systolic Blood pressure.  This is a good outcome variable because it intuitively makes sense as an outcome, whereas other variables such as BMI occur in a large part due to environmental factors that aren't factored into this study such as diet. Originally, Total Cholestrol was considered as the outcome variable, however it has relatively weak correlation with many of the factors of interest. Systolic Blood Pressure has the strongest correlation with Diabolic Blood Pressure, however this is a relatively uninteresting relationship to study as it they can be considered more or less colinear.  The second highest correlation is between age and systolic blood pressure, $\rho=0.40$.  A plot of systolic blood pressure vs. age is demonstrates in table 3.
 
-# Multiple regression model, 1 continuous and 1 categorical variables
-m2<-lm(SYSBP~BMI*factor(SEX), data=frm1_du)
-summary(m2)
-qplot(BMI, SYSBP, data=frm1_du, color=SEX) + geom_smooth(method="lm",se=TRUE)
-
-# Another trial with another continuous variable
-m3<-lm(SYSBP~AGE*factor(SEX), data=frm1_du)
-summary(m3)
-qplot(AGE, SYSBP, data=frm1_du, color=SEX) + geom_smooth(method="lm",se=TRUE)
-
-# Another trial with another continuous variable
-m4<-lm(GLUCOSE~AGE*factor(SEX), data=frm1_du)
-summary(m4)
-qplot(AGE, GLUCOSE, data=frm1_du, color=SEX) + geom_smooth(method="lm",se=TRUE)
-
-@
 
 \end{document}
