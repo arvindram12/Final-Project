@@ -1,0 +1,23 @@
+\documentclass{article}
+
+\begin{document}
+
+Conclusion
+
+In this report, we performed three analyses to understand the framingham's data set.
+
+Multiple regression model is useful to understand linear relationship of data set. There have been different measurements to draw the best multipe regression model. In previous literature, AIS and BIS were used to predict the best model, but led to different results. This report showed that the best linear regression models based on the two criteria were the same. This result might originate from characteristics of the data set that we analyzed. Thus, future researches would be necessary to decide what criteria are appropriate for which data set.
+
+The results from regression tree analysis were simple to interpret data set. Another strong point was that it allows us to look at interactions of the predictor variables to predict the outcome variable. However, we should be cautious when we decide approrpiate number of splits fewer variables. The 1-SE rule was used to decide the appropriate number of splits to avoid overfitting the data set in this report. 
+Compared to the results from the multiple regression model by AIS and BIS, the regression tree was constructed by fewer number of predictor variables, which makes interpretation easier. Another difference was that SEX variable was not included in the regression tree model. The multiple regression model also didn't show significant p-value even though the variable was included to construct the model. This fact was consistent with the results from the regression tree model.
+
+Significant values for all the four predictor variables were found in the multiple regression model basedon on the tree model. This indicated that results from the regression tree model could be a good start to build complex multiple regression models. 
+
+
+Bootsrapping is a great analysis that demonstrates how much each variable contriutes to a model.
+
+To conclude, there are many analyses to interpret dataset. Understanding on the analyses is critical because different analyses could result in different results, which are related to different interpretations. 
+
+
+
+\end{document}
