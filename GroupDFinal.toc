@@ -1,0 +1,18 @@
+\contentsline {section}{\numberline {1}Characteristics of the Data Set}{2}
+\contentsline {subsection}{\numberline {1.1}Observations}{2}
+\contentsline {subsection}{\numberline {1.2}Variables}{2}
+\contentsline {subsection}{\numberline {1.3}Missing Data}{2}
+\contentsline {subsection}{\numberline {1.4}Candidate Continuous Variables for Linear Regression}{3}
+\contentsline {section}{\numberline {2}Model Selection}{3}
+\contentsline {subsection}{\numberline {2.1}Introduction}{3}
+\contentsline {subsection}{\numberline {2.2}Methods}{4}
+\contentsline {subsection}{\numberline {2.3}Results and Discussion}{4}
+\contentsline {section}{\numberline {3}Regression Tree Analysis}{6}
+\contentsline {subsection}{\numberline {3.1}Introduction}{6}
+\contentsline {subsection}{\numberline {3.2}Methods}{7}
+\contentsline {subsection}{\numberline {3.3}Results and Discussion}{7}
+\contentsline {section}{\numberline {4}Re-sampling Inference:Bootstrapping}{8}
+\contentsline {subsection}{\numberline {4.1}Introduction}{8}
+\contentsline {subsection}{\numberline {4.2}Methods}{9}
+\contentsline {subsection}{\numberline {4.3}Results and Discussion}{10}
+\contentsline {section}{\numberline {5}Conclusion}{11}
